@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Rational approximation calculator by CMG Lee</title>
+  <style type="text/css">
+body       { font:100% sans-serif; color:#000000; background:#ffffff; }
+table      { border-collapse:collapse; }
+td         { border:1px solid #cccccc; padding:0 2px; text-align:center; }
+pre        { margin:0; text-align:left; }
+.header    { font-weight:bold; background:#eeeeee; } 
+.underline { border-bottom:1px solid; }
+.big       { font-size:150%; }
+.vis       { background:#ffffff; padding-left:1ex;
+             text-align:left; vertical-align:top; }
+  </style>
+  <script type="text/javascript">
+
+function ratapprox(n_str) {
+ var PHI = (Math.sqrt(5) + 1) / 2;
+ var n   = Math.PI;
+ try {
+  with (Math) { n = eval(n_str); }
+ } catch(e) {
+  document.getElementById('result').innerHTML = '<pre>' + e.toString() + '</pre>';
+  return;
+ }  
+ var nTerm      = 10;
+ var coeffAbort = 1e6;
+ var k      = new Array(); /// continued fraction coeffs
+ var d      = new Array(); /// working differences
+ var p      = new Array(); /// working products
+ var a      = new Array(); /// approx fract nominators
+ var b      = new Array(); /// approx fract denominators
+ var calc   = new Array(); // calculation
+ var result = '';
+
+ /// Get continued fraction coefficients:
+ ///          1    1            1
+ /// n ~ k1 + --   --   ...   ------
+ ///          k2 + k3 +     + knTerm
+
+ d[0] = n;
+ for (var i = 1; i <= nTerm; i++) {
+  var pad = i > 9 ? '' : ' ';
+  if (i == 1) {
+   d[i] = 1.0;
+   calc[i] = ' d0 = n      \t: ' + d[0]
+    + '\n d' + i + ' = 1      \t: ' + d[i] + '\n';
+  } else {
+   p[i] = k[i - 1] * d[i - 1];
+   calc[i] = pad + 'p' + i + ' = k' + (i - 1)
+    + ' &#215; d' + (i - 1) + '\t: ' + p[i] + '\n';
+   d[i] = d[i - 2] - p[i];
+   calc[i] += pad + 'd' + i + ' = d' + (i - 2)
+    + ' &#8722; p' + (i - 1) + '\t: ' + d[i] + '\n';
+  }   
+  k[i] = Math.floor(d[i - 1] / d[i]);
+  if (i > 1 && k[i] > coeffAbort) { nTerm = i - 1; }
+  calc[i] += pad + 'k' + i + ' = &#8970;d' + (i - 1)
+   + '/d' + i + '&#8971;\t: <b>' + k[i] + '</b>\n';
+ }
+
+ /// Get approximate fractions by evaluating
+ /// continued fraction to 1, 2 ... nTerm terms
+
+ for (var j = 1; j <= nTerm; j++) {
+  a[j] = k[j];
+  b[j] = 1.0;
+  for (var i = j - 1; i >= 1; i--) {
+   a[i] = k[i] * a[i + 1] + b[i + 1];
+   b[i] = a[i + 1];
+  }
+  var apx = a[1] / b[1];
+  var err = (apx - n) / n;
+  var err_str = Math.abs(err) > 1e-2 ?
+                Math.round(1e4 * err) / 1e2 + '&thinsp;%' :
+                Math.round(1e8 * err) / 1e2 + '&thinsp;ppm';
+  result += '<tr><td><table style="margin:auto;"><tr><th class="underline">'
+   + a[1] + '</th></tr><tr><th>' + b[1] + '</th></tr></table></td><td>'
+   + err_str + '<br />(' + err.toExponential(5) + ')</td><td><pre>'
+   + calc[j] + '</pre></td><td class="big">' + k[j] + '</td></tr>';
+ }
+
+ /// Draw continued fraction
+
+ var html1 = '';
+ var html2 = '';
+ for (var j = 1; j <= nTerm; j++) {
+  html1 += '<table style="text-align:center;"><tr><th></th><th>1</th></tr>'
+   + '<tr><th>' + k[j]
+   + '&nbsp;+</th><th><hr noshade="noshade" /></th></tr><tr><th></th><th>\n';
+  html2 += '</th></tr></table>\n';
+ }
+
+ document.getElementById('result').innerHTML = '<table>'
+  // + '<caption>Target number = ' + n + '</caption>'
+  + '<tr class="header"><td>Fraction</td><td>Error</td>'
+  + '<td>Calculation</td><td>Coefficient</td><th class="vis" rowspan="'
+  + nTerm + '">' + n + ' =' + html1 + '...' + html2 + '</th></tr>'
+  + result + '</table>';
+}
+
+// --></script>
+ </head>
+ <body onLoad="with (document.forms[0].n) { focus(); select(); }">
+  <form onSubmit="ratapprox(this.n.value); return false;">
+  <h2>Rational approximation calculator</h2>
+   Enter a decimal number or JavaScript expression:
+   <table style="width:100%; border-collapse:collapse;"><tr>
+    <th><input type="text" name="n" style="width:99%; font-size:125%;"
+               value="  tan(60 * PI/180)  " /></th>
+    <th width="1"><input type="submit" value="Calculate" /></th>
+   </tr></table><br />
+   <div id="result"></div>
+   <br />Notes:
+   <ol>
+    <li>Use pow(<i>x</i>, <i>y</i>) to raise <i>x</i>
+     to the power of <i>y</i>, not ^ which denotes XOR.</li>
+    <li>Accuracy is subject to JavaScript rounding error
+     e.g. incorrect 10th coefficient of sqrt(17).</li>
+   </ol>
+  </form>
+ </body>
+</html> 
