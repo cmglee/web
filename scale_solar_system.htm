@@ -48,10 +48,11 @@ function init() {
   html_table += '<tr>' + html_row + '</tr>';
  }
  document.getElementById('table').innerHTML = '<table>' +
-  '<tr><th colspan="7" style="padding:1ex;">Scale = 1 :' +
+  '<tr><th colspan="8" style="padding:1ex;">Scale = 1 :' +
   ' <input id="scale" style="width:20ex;" onchange="update_table();"/></th></tr>' +
   '<tr><th rowspan="2" style="width:1ex;">Body</th>' +
-  '<th colspan="3">Distance from parent* (m)</th><th colspan="3">Diameter (mm)</th></tr>' +
+  '<th colspan="3">Distance from parent* (m)</th><td rowspan="' + (rows.length + 2) +
+  '">&nbsp;</td><th colspan="3">Diameter (mm)</th></tr>' +
   '<td>Minimum</td><td>Average</td><td>Maximum</td>' +
   '<td>Minimum</td><td>Average</td><td>Maximum</td>' +
   '</tr>' + html_table + '</table>';
@@ -97,27 +98,27 @@ function update_scale(name) {
 http://nssdc.gsfc.nasa.gov/planetary/factsheet
 http://nssdc.gsfc.nasa.gov/planetary/factsheet/galileanfact_table.html
 http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
-*|NAME|PERI(Gm)|AVG(Gm)|APO(Gm)|POL.RAD(km)|VOL.MEAN RAD(km)|EQ.RAD(km)|DIAM(km)
+#|NAME|PERI(Gm)|AVG(Gm)|APO(Gm)|POL.RAD(km)|VOL.MEAN RAD(km)|EQ.RAD(km)|DIAM(km)
 -->
    <textarea id="data" style="display:none;width:100%;height:5em;">
 0|Sun              |     -   |     -   |      -   |     -   |695700    |      -
 1|Mercury          |   46.0  |   57.9  |    69.8  | 2438.3  |  2439.7  |  2440.5
-1|Venus            |  107.5  |  108.2  |   108.9  | 6051.8  |  6051.8  |  6051.8
-1|Earth            |  147.1  |  149.6  |   152.1  | 6356.752|  6371.000|  6378.137
-2|Moon             |    0.363|    0.384|     0.406| 1736.0  |  1737.4  |  1738.1
-1|Mars             |  206.7  |  228.0  |   249.3  | 3376.2  |  3389.5  |  3396.2
+1|VenusÂ            |  107.5  |  108.2  |   108.9  | 6051.8  |  6051.8  |  6051.8
+1|EarthÂ            |  147.1  |  149.6  |   152.1  | 6356.752|  6371.000|  6378.137
+2|MoonÂ             |    0.363|    0.384|     0.406| 1736.0  |  1737.4  |  1738.1
+1|MarsÂ             |  206.7  |  228.0  |   249.3  | 3376.2  |  3389.5  |  3396.2
 1|Ceres            |  381    |  413    |   446    |  445.9  |   469.73 |   482.2
 1|Jupiter          |  740.6  |  778.5  |   816.4  |66854    | 69911    | 71492
-2|Io               |    0.420|    0.422|     0.424|     -   |  1821.5  |      -
-2|Europa           |    0.664|    0.671|     0.678|     -   |  1560.8  |      -
+2|IoÂ Â Â             |    0.420|    0.422|     0.424|     -   |  1821.5  |      -
+2|EuropaÂ           |    0.664|    0.671|     0.678|     -   |  1560.8  |      -
 2|Ganymede         |    1.068|    1.070|     1.072|     -   |  2631.2  |      -
 2|Callisto         |    1.870|    1.883|     1.896|     -   |  2410.3  |      -
-1|Saturn           | 1357.6  | 1432.0  |  1506.5  |54364    | 58232    | 60268
-2|Titan            |    1.186|    1.222|     1.258|     -   |  2575    |      -
-1|Uranus           | 2732.7  | 2867.0  |  3001.4  |24973    | 25362    | 25559
+1|SaturnÂ           | 1357.6  | 1432.0  |  1506.5  |54364    | 58232    | 60268
+2|TitanÂ            |    1.186|    1.222|     1.258|     -   |  2575    |      -
+1|UranusÂ           | 2732.7  | 2867.0  |  3001.4  |24973    | 25362    | 25559
 1|Neptune          | 4471.1  | 4515.0  |  4558.9  |24341    | 24622    | 24764
-2|Triton           |    0.355|    0.355|     0.355|     -   |  1353.4  |      -
-1|Pluto            | 4436.8  | 5906.4  |  7375.9  |     -   |  1188    |      -
+2|TritonÂ           |    0.355|    0.355|     0.355|     -   |  1353.4  |      -
+1|PlutoÂ            | 4436.8  | 5906.4  |  7375.9  |     -   |  1188    |      -
 1|Eris             | 5725    |10125    | 14579    |     -   |  1163    |      -
 1|Sedna            |11398    |    -    |140200    |     -   |   500    |      -
 0|Proxima Centauri*|     -   |40208e3  |      -   |     -   |107280    |      -
