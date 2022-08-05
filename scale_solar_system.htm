@@ -14,8 +14,9 @@ input    { text-align:right; width:10ex; }
   </style>
   <script type="text/javascript">
 
-var scale  = 1e9;
+var scale  = 1e10;
 var datass = [];
+
 function init() {
  var html_table = '';
  var rows = document.getElementById('data').value.trim().split('\n');
@@ -62,14 +63,14 @@ function init() {
 }
 
 function update_table() {
- scale = parseFloat(document.getElementById('scale').value.replace(/\s/g, ''));
+ scale = parse_value(document.getElementById('scale').value);
  for (var i_row = 0; i_row < datass.length; ++i_row) {
   datas = datass[i_row];
   for (var i_field = 2; i_field < datas.length; ++i_field) {
    el_field = document.getElementById('i' + i_row + '_' + i_field);
    if (el_field) {
-    el_field.value = (datas[i_field] * (i_field < 5 ? 1e9 : 1e6) /
-                      scale).toFixed(i_field < 5 && i_row == datass.length - 1 ? 0 : 1);
+    el_field.value = format_value((datas[i_field] * (i_field < 5 ? 1e9 : 1e6) / scale),
+                                  i_field > 4 ? 2 : i_row == datass.length - 1 ? 0 : 2);
    }
   }
  }
@@ -79,10 +80,14 @@ function update_scale(name) {
  names   = name.split('_');
  i_row   = parseFloat(names[0].substring(1));
  i_field = parseFloat(names[1]);
- document.getElementById('scale').value = parseInt(datass[i_row][i_field] /
-  parseFloat(document.getElementById(name).value) * (i_field < 5 ? 1e9 : 1e6)).toLocaleString('fr');
+ document.getElementById('scale').value = format_value(parseInt(datass[i_row][i_field] /
+  parse_value(document.getElementById(name).value) * (i_field < 5 ? 1e9 : 1e6)));
  update_table();
 }
+
+function parse_value(value) { return parseFloat(value.replace(/\s/g, '')); }
+function format_value(value, dp=0) { return value.toLocaleString('fr',
+ {minimumFractionDigits: dp, maximumFractionDigits: dp}).replace(/,/g, '.'); }
 
 // --></script>
  </head>
@@ -90,7 +95,8 @@ function update_scale(name) {
   <form onSubmit="return false;">
   <h2>Solar System scale model calculator</h2>
    <p>Update any text box and all the others update accordingly<br />
-      e.g. set Earth's average diameter to 1 mm, or the moon's average distance to 1 m.</p>
+      e.g. set Earth's average diameter to 1 mm, or the moon's average distance to 1 m.<br />
+      Distances are measured from the centres of the bodies.</p>
    <div id="table"></div>
    <p>* Proxima Centauri's distance is its distance from the sun.</p>
    <p>&#169; 2022 &#8226; cm&#610;&#671;ee &#8226; CC-BY-SA 4.0</p>
@@ -115,6 +121,7 @@ http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
 2|Callisto         |    1.870|    1.883|     1.896|     -   |  2410.3  |      -
 1|Saturn           | 1357.6  | 1432.0  |  1506.5  |54364    | 58232    | 60268
 2|Titan            |    1.186|    1.222|     1.258|     -   |  2575    |      -
+2|main&nbsp;rings  |     -   |     -   |      -   |67300    |      -   |140300
 1|Uranus           | 2732.7  | 2867.0  |  3001.4  |24973    | 25362    | 25559
 1|Neptune          | 4471.1  | 4515.0  |  4558.9  |24341    | 24622    | 24764
 2|Triton           |    0.355|    0.355|     0.355|     -   |  1353.4  |      -
