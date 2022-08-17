@@ -51,7 +51,7 @@ function init() {
  document.getElementById('table').innerHTML = '<table>' +
   '<tr><th colspan="8" style="padding:1ex;">Scale = 1 :' +
   ' <input id="scale" style="width:20ex;" onchange="update_table();"/></th></tr>' +
-  '<tr><th rowspan="2" style="width:1ex;">Body</th>' +
+  '<tr><th rowspan="2" style="width:1ex;">Object</th>' +
   '<th colspan="3">Distance from parent* (m)</th><td rowspan="' + (rows.length + 2) +
   '">&nbsp;</td><th colspan="3">Diameter (mm)</th></tr>' +
   '<td>Minimum</td><td>Average</td><td>Maximum</td>' +
@@ -70,7 +70,7 @@ function update_table() {
    el_field = document.getElementById('i' + i_row + '_' + i_field);
    if (el_field) {
     el_field.value = format_value((datas[i_field] * (i_field < 5 ? 1e9 : 1e6) / scale),
-                                  i_field > 4 ? 2 : i_row == datass.length - 1 ? 0 : 2);
+                                  i_field > 4 ? 2 : i_row < datass.length - 2 ? 2 : 0);
    }
   }
  }
@@ -96,7 +96,7 @@ function format_value(value, dp=0) { return value.toLocaleString('fr',
   <h2>Solar System scale model calculator</h2>
    <p>Update any text box and all the others update accordingly<br />
       e.g. set Earth's average diameter to 1 mm, or the moon's average distance to 1 m.<br />
-      Distances are measured from the centres of the bodies.</p>
+      Distances are measured from the centres of the objects.</p>
    <div id="table"></div>
    <p>* Proxima Centauri's distance is its distance from the sun.</p>
    <p>&#169; 2022 &#8226; cm&#610;&#671;ee &#8226; CC-BY-SA 4.0</p>
@@ -104,31 +104,36 @@ function format_value(value, dp=0) { return value.toLocaleString('fr',
 http://nssdc.gsfc.nasa.gov/planetary/factsheet
 http://nssdc.gsfc.nasa.gov/planetary/factsheet/galileanfact_table.html
 http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
+0|LMC*              |     -   |1.542e12 |      -   |     -   |  3.04e17 |      -
+1|heliopause        |12000    |     -   | 15000    |     -   |      -   |      -
 #|NAME|PERI(Gm)|AVG(Gm)|APO(Gm)|POL.RAD(km)|VOL.MEAN RAD(km)|EQ.RAD(km)|DIAM(km)
 -->
    <textarea id="data" style="display:none;width:100%;height:5em;">
-0|Sun              |     -   |     -   |      -   |     -   |695700    |      -
-1|Mercury          |   46.0  |   57.9  |    69.8  | 2438.3  |  2439.7  |  2440.5
-1|Venus            |  107.5  |  108.2  |   108.9  | 6051.8  |  6051.8  |  6051.8
-1|Earth            |  147.1  |  149.6  |   152.1  | 6356.752|  6371.000|  6378.137
-2|Moon             |    0.363|    0.384|     0.406| 1736.0  |  1737.4  |  1738.1
-1|Mars             |  206.7  |  228.0  |   249.3  | 3376.2  |  3389.5  |  3396.2
-1|Ceres            |  381    |  413    |   446    |  445.9  |   469.73 |   482.2
-1|Jupiter          |  740.6  |  778.5  |   816.4  |66854    | 69911    | 71492
-2|Io               |    0.420|    0.422|     0.424|     -   |  1821.5  |      -
-2|Europa           |    0.664|    0.671|     0.678|     -   |  1560.8  |      -
-2|Ganymede         |    1.068|    1.070|     1.072|     -   |  2631.2  |      -
-2|Callisto         |    1.870|    1.883|     1.896|     -   |  2410.3  |      -
-1|Saturn           | 1357.6  | 1432.0  |  1506.5  |54364    | 58232    | 60268
-2|Titan            |    1.186|    1.222|     1.258|     -   |  2575    |      -
-2|main&nbsp;rings  |     -   |     -   |      -   |67300    |      -   |140300
-1|Uranus           | 2732.7  | 2867.0  |  3001.4  |24973    | 25362    | 25559
-1|Neptune          | 4471.1  | 4515.0  |  4558.9  |24341    | 24622    | 24764
-2|Triton           |    0.355|    0.355|     0.355|     -   |  1353.4  |      -
-1|Pluto            | 4436.8  | 5906.4  |  7375.9  |     -   |  1188    |      -
-1|Eris             | 5725    |10125    | 14579    |     -   |  1163    |      -
-1|Sedna            |11398    |    -    |140200    |     -   |   500    |      -
-0|Proxima Centauri*|     -   |40208e3  |      -   |     -   |107280    |      -
+0|Sun               |     -   |     -   |      -   |     -   |695700    |      -
+1|Mercury           |   46.0  |   57.9  |    69.8  | 2438.3  |  2439.7  |  2440.5
+1|Venus             |  107.5  |  108.2  |   108.9  | 6051.8  |  6051.8  |  6051.8
+1|Earth             |  147.1  |  149.6  |   152.1  | 6356.752|  6371.000|  6378.137
+2|Moon              |    0.363|    0.384|     0.406| 1736.0  |  1737.4  |  1738.1
+1|Mars              |  206.7  |  228.0  |   249.3  | 3376.2  |  3389.5  |  3396.2
+1|asteroid&nbsp;belt|  330    |     -   |   480    |     -   |      -   |      -
+1|Ceres             |  381    |  413    |   446    |  445.9  |   469.73 |   482.2
+1|Jupiter           |  740.6  |  778.5  |   816.4  |66854    | 69911    | 71492
+2|Io                |    0.420|    0.422|     0.424|     -   |  1821.5  |      -
+2|Europa            |    0.664|    0.671|     0.678|     -   |  1560.8  |      -
+2|Ganymede          |    1.068|    1.070|     1.072|     -   |  2631.2  |      -
+2|Callisto          |    1.870|    1.883|     1.896|     -   |  2410.3  |      -
+1|Saturn            | 1357.6  | 1432.0  |  1506.5  |54364    | 58232    | 60268
+2|Titan             |    1.186|    1.222|     1.258|     -   |  2575    |      -
+2|main&nbsp;rings   |     -   |     -   |      -   |67300    |      -   |140300
+1|Uranus            | 2732.7  | 2867.0  |  3001.4  |24973    | 25362    | 25559
+1|Neptune           | 4471.1  | 4515.0  |  4558.9  |24341    | 24622    | 24764
+2|Triton            |    0.355|    0.355|     0.355|     -   |  1353.4  |      -
+1|Kuiper belt       | 4500    |     -   |  7500    |     -   |      -   |      -
+1|Pluto             | 4436.8  | 5906.4  |  7375.9  |     -   |  1188    |      -
+1|Eris              | 5725    |10125    | 14579    |     -   |  1163    |      -
+1|Sedna             |11398    |77000    |140200    |     -   |   500    |      -
+1|Oort cloud        |    3e5  |     -   |    15e6  |     -   |      -   |      -
+0|Proxima Centauri* |     -   |40208e3  |      -   |     -   |107280    |      -
    </textarea>
   </form>
  </body>
