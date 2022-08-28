@@ -14,8 +14,9 @@ input    { text-align:right; width:10ex; }
   </style>
   <script type="text/javascript">
 
-var scale  = 1e10;
-var datass = [];
+var scale      = 1e10;
+var datass     = [];
+var svg_common = '';
 
 function init() {
  var html_table = '';
@@ -33,7 +34,7 @@ function init() {
      var pad = '';
      for (var i_pad = 0; i_pad < type; ++i_pad) { pad += '&nbsp;&nbsp;'; }
      html_row += '<td class="name type' + type + '">' + pad + field + '</td>';
-    } else {
+    } else if (i_field < 8) {
      if (field == '-') { html_row += '<td>&#8212;</td>'; }
      else {
       name      = 'i' + i_row + '_' + i_field;
@@ -59,7 +60,85 @@ function init() {
   '</tr>' + html_table + '</table>';
 
  document.getElementById('scale').value = scale.toLocaleString('fr');
+ make_svg_common();
  update_table();
+}
+
+function make_svg_common() {
+ svg_common        = document.getElementById('svg').innerHTML
+ var cx_separation = 90;
+ var cx_accum      = 0;
+ var d_avg_saturn, r_max_saturn, r_min_saturn, colour_saturn;
+ var rows          = document.getElementById('data').value.trim().split('\n');
+ for (var i_row = 0; i_row < rows.length; ++i_row) {
+  var fields = rows[i_row].split('|');
+  var colour = fields[8].trim();
+  if (colour) {
+   var name       = fields[1].trim();
+   var is_sun     = name == 'Sun';
+   var is_jupiter = name == 'Jupiter';
+   var is_saturn  = name == 'Saturn';
+   var is_rings   = name.substring(0, 4) == 'main'; //@@@@
+   var is_alpha   = name == 'Pluto' || name == 'Ceres';
+   var type       = parseInt(fields[0].trim());
+   var d_min      = parseFloat(fields[2].trim());
+   var d_avg      = parseFloat(fields[3].trim());
+   var d_max      = parseFloat(fields[4].trim());
+   var r_avg      = parseFloat(fields[6].trim()) / 1e2;
+   var r_max      = parseFloat(fields[7].trim()) / 1e2;
+   var r_min      = parseFloat(fields[5].trim()) / 1e2;
+   if (is_sun) { d_avg = 0; d_min = -5; d_max = 5; r_avg /= 10; }
+   if (!r_max) { r_max = r_avg; }
+   if (!r_min) { r_min = r_avg; }
+   if (type < 2) {
+    svg_common += ' <rect x="' + d_min + '" y="-1700" width="' + (d_max - d_min) + '" height="200" fill="#' + colour + '"' + (is_alpha ? ' fill-opacity="0.3"' : '') + '/>\n'
+   }
+   if (is_saturn) {
+    d_avg_saturn  = d_avg;
+    r_max_saturn  = r_max;
+    r_min_saturn  = r_min;
+    colour_saturn = colour;
+   } else if (r_min) {
+    if (is_sun) {
+     svg_common += ' <ellipse id="' + name + '" cx="' + cx_accum + '" cy="' + -r_min + '" rx="' + r_max + '" ry="' + r_min + '" fill="url(#grad_sun)"/>\n'
+    } else {
+     cx_accum += r_max;
+     if (is_rings) {
+      name = 'Saturn';
+      // svg_common += ' <g id="saturn" transform="translate(' + cx_accum + ',' + -r_min_saturn + ')"><path id="rings" d="M ' + -r_max + ',0 A ' + r_max + ',' + r_max / 5 + ' 0 0 1 ' + r_max + ',0 H ' + r_min + ' A ' + r_min + ',' + r_min / 5 + ' 0 0 0 ' + -r_min + ',0 Z" fill="#' + colour + '"/><ellipse cx="0" cy="0" rx="' + r_max_saturn + '" ry="' + r_min_saturn + '" fill="#' + colour_saturn + '"/><use xlink:href="#rings" transform="scale(-1)"/></g>\n'
+      svg_common += ' <g id="saturn" transform="translate(' + cx_accum + ',' + -r_min_saturn + ')"><path id="rings" d="M ' + -r_max + ',2 A ' + r_max + ',' + r_max / 5 + ' 0 0 1 ' + r_max + ',2 H ' + r_min + ' A ' + r_min + ',' + r_min / 5 + ' 0 0 0 ' + -r_min + ',2 Z" fill="#' + colour + '"/><use xlink:href="#orb" transform="scale(' + r_max_saturn / 100 + ',' + r_min_saturn / 100 + ')" fill="#' + colour_saturn + '"/><use xlink:href="#rings" transform="scale(-1)"/></g>\n'
+      d_avg = d_avg_saturn;
+      r_min = r_min_saturn;
+     } else {
+      svg_common += ' <use id="' + name + '" xlink:href="#orb" transform="translate(' + cx_accum + ',' + -r_min + ') scale(' + r_max / 100 + ',' + r_min / 100 + ')" fill="#' + colour + '"/>\n'
+     }
+    }
+    svg_common += ' <path id="' + name + '_arrow" d="M ' + cx_accum + ',' + (r_min * -2 - 20) + ' C ' + cx_accum + ',-1400 ' + d_avg + ' -1370 ' + d_avg + ',-1470 V -1495 m -20,20 l 20,-20 l 20,20" fill="none" stroke="#000"/>\n'
+    // if (is_sun || is_jupiter) { svg_common += ' <text x="' + cx_accum + '" y="' + -r_min + '" dy="0.7ex">&#215;' + (is_sun ? '100 000' : '1 000 000') + '</text>\n'; }
+    if (is_sun) { svg_common += ' <text x="' + cx_accum + '" y="' + -r_min + '" dy="0.7ex"><tspan>(</tspan><tspan dy="0.2ex">&#247;10</tspan><tspan dy="-0.2ex">)</tspan></text>\n'; }
+    cx_accum += r_max + (is_sun ? 3 : is_jupiter ? 2.5 : is_alpha || is_rings ? 0 : 1) * cx_separation;
+   }
+  }
+ }
+}
+
+function update_svg() {
+ var scaless = [[Math.pow(10, Math.log10(scale    ) % 1 - 1), 1],
+                [Math.pow(10, Math.log10(scale * 2) % 1 - 1), 2],
+                [Math.pow(10, Math.log10(scale * 5) % 1 - 1), 5]];
+ scaless.sort().reverse();
+ // console.log(scaless[0]);
+ var scale_svg = scaless[0][0];
+ var svg = ' <text x="-480" y="-1620" font-weight="bold">1:' + format_value(scale) + '</text>\n <g clip-path="url(#clip_r)">\n  <rect x="-720" y="-9995" width="9999" height="9999" fill="url(#pattern_r_10)" transform="scale(1,' + scale_svg + ')"/>';
+ for (var i = 0; i < 5; ++i) {
+  svg += '<text x="-815" y="' + i * -1000 * scale_svg + '" dy="0.7ex">' + i * 1e10 / Math.pow(10, Math.floor(Math.log10(scale))) * scaless[0][1] + '</text>';
+ }
+ svg += ' </g>\n <text x="-815" y="-1450">mm</text>\n <text x="-120" y="-1800">m</text>\n <rect x="0" y="-1780" width="99999" height="180" fill="url(#pattern_d_10)" transform="scale(' + scale_svg + ',1)"/>\n';
+ for (var i = 0; i < 20; ++i) {
+  svg += '<text x="' + i * 1000 * scale_svg + '" y="-1800">' + i * 1e11 / Math.pow(10, Math.floor(Math.log10(scale))) * scaless[0][1] + '</text>';
+ }
+ document.getElementById('svg').innerHTML = svg + svg_common;
+ // console.log(document.getElementById('svg').innerHTML);
 }
 
 function update_table() {
@@ -74,6 +153,7 @@ function update_table() {
    }
   }
  }
+ update_svg();
 }
 
 function update_scale(name) {
@@ -93,10 +173,61 @@ function format_value(value, dp=0) { return value.toLocaleString('fr',
  </head>
  <body onLoad="init();">
   <form onSubmit="return false;">
-  <h2>Solar System scale model calculator</h2>
-   <p>Update any text box and all the others update accordingly<br />
+   <h2>Solar System scale model calculator</h2>
+   <p>Update any text box and all the others update accordingly
       e.g. set Earth's average diameter to 1 mm, or the moon's average distance to 1 m.<br />
       Distances are measured from the centres of the objects.</p>
+<svg id="svg" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="-920 -1900 8320 1950" font-size="100" font-family="Helvetica,Arial,sans-serif" text-anchor="middle" fill="#000" stroke="none" stroke-width="8">
+ <defs>
+  <filter id="filter_blur"><feGaussianBlur stdDeviation="2"/></filter>
+  <radialGradient id="grad_sphere" cx="50%" cy="50%" r="50%" fx="50%" fy="90%">
+   <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
+   <stop offset="99%" stop-color="#000000" stop-opacity="0.2"/>
+  </radialGradient>
+  <linearGradient id="grad_highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+   <stop offset="10%" stop-color="#ffffff" stop-opacity="0.9"/>
+   <stop offset="99%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <g id="orb" stroke="none">
+   <circle  cx="0" cy="0" r="100"/>
+   <circle  cx="0" cy="0" r="100" fill="url(#grad_sphere)"/>
+   <ellipse cx="0" cy="-45" rx="70" ry="50" fill="url(#grad_highlight)" filter="url(#filter_blur)"/>
+  </g>
+
+  <radialGradient id="grad_sun" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+   <stop offset="20%" stop-color="#ffff66"/>
+   <stop offset="90%" stop-color="#ffcc00"/>
+  </radialGradient>
+
+  <pattern id="pattern_d_1" patternUnits="userSpaceOnUse" width="100" height="100">
+   <rect x="0" y="-5" width="100" height="110" stroke="#cccccc" fill="none"/>
+  </pattern>
+  <pattern id="pattern_d_5" patternUnits="userSpaceOnUse" width="500" height="100">
+   <rect x="0" y="-5" width="500" height="110" stroke="#999999" fill="url(#pattern_d_1)"/>
+  </pattern>
+  <pattern id="pattern_d_10" patternUnits="userSpaceOnUse" width="1000" height="100">
+   <rect x="0" y="-5" width="1000" height="110" stroke="#666666" fill="url(#pattern_d_5)"/>
+  </pattern>
+
+  <pattern id="pattern_r_1" patternUnits="userSpaceOnUse" width="100" height="100">
+   <rect x="-5" y="0" width="110" height="100" stroke="#cccccc" fill="none"/>
+  </pattern>
+  <pattern id="pattern_r_5" patternUnits="userSpaceOnUse" width="100" height="500">
+   <rect x="-5" y="0" width="110" height="500" stroke="#999999" fill="url(#pattern_r_1)"/>
+  </pattern>
+  <pattern id="pattern_r_10" patternUnits="userSpaceOnUse" width="100" height="1000">
+   <rect x="-5" y="0" width="110" height="1000" stroke="#666666" fill="url(#pattern_r_5)"/>
+  </pattern>
+  <clipPath id="clip_r">
+   <rect x="-999" y="-1440" width="9999" height="9999"/>
+  </clipPath>
+ </defs>
+ <!--
+ <path d="M 940,-10 v 30 H 7350 v -30" fill="none" stroke="#ccc"/>
+ <text x="4000" y="120">&#215;10 000</text>
+ <text x="0"    y="120">&#215;1 000</text>
+ -->
+</svg>
    <div id="table"></div>
    <p>* Proxima Centauri's distance is its distance from the sun.</p>
    <p>&#169; 2022 &#8226; cm&#610;&#671;ee &#8226; CC-BY-SA 4.0</p>
@@ -109,31 +240,31 @@ http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
 #|NAME|PERI(Gm)|AVG(Gm)|APO(Gm)|POL.RAD(km)|VOL.MEAN RAD(km)|EQ.RAD(km)|DIAM(km)
 -->
    <textarea id="data" style="display:none;width:100%;height:5em;">
-0|Sun               |     -   |     -   |      -   |     -   |695700    |      -
-1|Mercury           |   46.0  |   57.9  |    69.8  | 2438.3  |  2439.7  |  2440.5
-1|Venus             |  107.5  |  108.2  |   108.9  | 6051.8  |  6051.8  |  6051.8
-1|Earth             |  147.1  |  149.6  |   152.1  | 6356.752|  6371.000|  6378.137
-2|Moon              |    0.363|    0.384|     0.406| 1736.0  |  1737.4  |  1738.1
-1|Mars              |  206.7  |  228.0  |   249.3  | 3376.2  |  3389.5  |  3396.2
-1|asteroid&nbsp;belt|  330    |     -   |   480    |     -   |      -   |      -
-1|Ceres             |  381    |  413    |   446    |  445.9  |   469.73 |   482.2
-1|Jupiter           |  740.6  |  778.5  |   816.4  |66854    | 69911    | 71492
-2|Io                |    0.420|    0.422|     0.424|     -   |  1821.5  |      -
-2|Europa            |    0.664|    0.671|     0.678|     -   |  1560.8  |      -
-2|Ganymede          |    1.068|    1.070|     1.072|     -   |  2631.2  |      -
-2|Callisto          |    1.870|    1.883|     1.896|     -   |  2410.3  |      -
-1|Saturn            | 1357.6  | 1432.0  |  1506.5  |54364    | 58232    | 60268
-2|Titan             |    1.186|    1.222|     1.258|     -   |  2575    |      -
-2|main&nbsp;rings   |     -   |     -   |      -   |67300    |      -   |140300
-1|Uranus            | 2732.7  | 2867.0  |  3001.4  |24973    | 25362    | 25559
-1|Neptune           | 4471.1  | 4515.0  |  4558.9  |24341    | 24622    | 24764
-2|Triton            |    0.355|    0.355|     0.355|     -   |  1353.4  |      -
-1|Kuiper belt       | 4500    |     -   |  7500    |     -   |      -   |      -
-1|Pluto             | 4436.8  | 5906.4  |  7375.9  |     -   |  1188    |      -
-1|Eris              | 5725    |10125    | 14579    |     -   |  1163    |      -
-1|Sedna             |11398    |77000    |140200    |     -   |   500    |      -
-1|Oort cloud        |    3e5  |     -   |    15e6  |     -   |      -   |      -
-0|Proxima Centauri* |     -   |40208e3  |      -   |     -   |107280    |      -
+0|Sun               |     -   |     -   |      -   |     -   |695700    |      -   |ff0
+1|Mercury           |   46.0  |   57.9  |    69.8  | 2438.3  |  2439.7  |  2440.5  |969
+1|Venus             |  107.5  |  108.2  |   108.9  | 6051.8  |  6051.8  |  6051.8  |cc0
+1|Earth             |  147.1  |  149.6  |   152.1  | 6356.752|  6371.000|  6378.137|00f
+2|Moon              |    0.363|    0.384|     0.406| 1736.0  |  1737.4  |  1738.1  |
+1|Mars              |  206.7  |  228.0  |   249.3  | 3376.2  |  3389.5  |  3396.2  |f60
+1|asteroid&nbsp;belt|  330    |     -   |   480    |     -   |      -   |      -   |ccc
+1|Ceres             |  381    |  413    |   446    |  445.9  |   469.73 |   482.2  |000
+1|Jupiter           |  740.6  |  778.5  |   816.4  |66854    | 69911    | 71492    |fc6
+2|Io                |    0.420|    0.422|     0.424|     -   |  1821.5  |      -   |
+2|Europa            |    0.664|    0.671|     0.678|     -   |  1560.8  |      -   |
+2|Ganymede          |    1.068|    1.070|     1.072|     -   |  2631.2  |      -   |
+2|Callisto          |    1.870|    1.883|     1.896|     -   |  2410.3  |      -   |
+1|Saturn            | 1357.6  | 1432.0  |  1506.5  |54364    | 58232    | 60268    |ff0
+2|Titan             |    1.186|    1.222|     1.258|     -   |  2575    |      -   |
+2|main&nbsp;rings   |     -   |     -   |      -   |67300    |      -   |140300    |cc0
+1|Uranus            | 2732.7  | 2867.0  |  3001.4  |24973    | 25362    | 25559    |9cf
+1|Neptune           | 4471.1  | 4515.0  |  4558.9  |24341    | 24622    | 24764    |06f
+2|Triton            |    0.355|    0.355|     0.355|     -   |  1353.4  |      -   |
+1|Kuiper belt       | 4500    |     -   |  7500    |     -   |      -   |      -   |
+1|Pluto             | 4436.8  | 5906.4  |  7375.9  |     -   |  1188    |      -   |960
+1|Eris              | 5725    |10125    | 14579    |     -   |  1163    |      -   |
+1|Sedna             |11398    |77000    |140200    |     -   |   500    |      -   |
+1|Oort cloud        |    3e5  |     -   |    15e6  |     -   |      -   |      -   |
+0|Proxima Centauri* |     -   |40208e3  |      -   |     -   |107280    |      -   |
    </textarea>
   </form>
  </body>
