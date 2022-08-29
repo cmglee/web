@@ -19,6 +19,8 @@ var datass     = [];
 var svg_common = '';
 
 function init() {
+ var scale_query = (new URLSearchParams(window.location.search)).get('s');
+ if (scale_query) { scale = scale_query; }
  var html_table = '';
  var rows = document.getElementById('data').value.trim().split('\n');
  for (var i_row = 0; i_row < rows.length; ++i_row) {
@@ -75,11 +77,11 @@ function make_svg_common() {
   var colour = fields[8].trim();
   if (colour) {
    var name       = fields[1].trim();
-   var is_sun     = name == 'Sun';
-   var is_jupiter = name == 'Jupiter';
-   var is_saturn  = name == 'Saturn';
-   var is_rings   = name.substring(0, 4) == 'main'; //@@@@
-   var is_alpha   = name == 'Pluto' || name == 'Ceres';
+   var is_sun     = name.match(/Sun/g        );
+   var is_jupiter = name.match(/Jupiter/g    );
+   var is_saturn  = name.match(/Saturn/g     );
+   var is_rings   = name.match(/rings/g      );
+   var is_alpha   = name.match(/Pluto|Ceres/g);
    var type       = parseInt(fields[0].trim());
    var d_min      = parseFloat(fields[2].trim());
    var d_avg      = parseFloat(fields[3].trim());
@@ -115,7 +117,7 @@ function make_svg_common() {
     }
     svg_common += ' <path id="' + name + '_arrow" d="M ' + cx_accum + ',' + (r_min * -2 - 20) + ' C ' + cx_accum + ',-1400 ' + d_avg + ' -1370 ' + d_avg + ',-1470 V -1495 m -20,20 l 20,-20 l 20,20" fill="none" stroke="#000"/>\n'
     // if (is_sun || is_jupiter) { svg_common += ' <text x="' + cx_accum + '" y="' + -r_min + '" dy="0.7ex">&#215;' + (is_sun ? '100 000' : '1 000 000') + '</text>\n'; }
-    if (is_sun) { svg_common += ' <text x="' + cx_accum + '" y="' + -r_min + '" dy="0.7ex"><tspan>(</tspan><tspan dy="0.2ex">&#247;10</tspan><tspan dy="-0.2ex">)</tspan></text>\n'; }
+    if (is_sun) { svg_common += ' <text x="' + cx_accum + '" y="' + -r_min + '" dy="0.7ex"><tspan>(</tspan><tspan dy="0.1ex">&#247;10</tspan><tspan dy="-0.1ex">)</tspan></text>\n'; }
     cx_accum += r_max + (is_sun ? 3 : is_jupiter ? 2.5 : is_alpha || is_rings ? 0 : 1) * cx_separation;
    }
   }
@@ -202,21 +204,27 @@ function format_value(value, dp=0) { return value.toLocaleString('fr',
   <pattern id="pattern_d_1" patternUnits="userSpaceOnUse" width="100" height="100">
    <rect x="0" y="-5" width="100" height="110" stroke="#cccccc" fill="none"/>
   </pattern>
+  <pattern id="pattern_d_2" patternUnits="userSpaceOnUse" width="200" height="100">
+   <rect x="0" y="-5" width="200" height="110" stroke="#cccccc" fill="none"/>
+  </pattern>
   <pattern id="pattern_d_5" patternUnits="userSpaceOnUse" width="500" height="100">
    <rect x="0" y="-5" width="500" height="110" stroke="#999999" fill="url(#pattern_d_1)"/>
   </pattern>
   <pattern id="pattern_d_10" patternUnits="userSpaceOnUse" width="1000" height="100">
-   <rect x="0" y="-5" width="1000" height="110" stroke="#666666" fill="url(#pattern_d_5)"/>
+   <rect x="0" y="-5" width="1000" height="110" stroke="#666666" fill="url(#pattern_d_2)"/>
   </pattern>
 
   <pattern id="pattern_r_1" patternUnits="userSpaceOnUse" width="100" height="100">
    <rect x="-5" y="0" width="110" height="100" stroke="#cccccc" fill="none"/>
   </pattern>
+  <pattern id="pattern_r_2" patternUnits="userSpaceOnUse" width="100" height="200">
+   <rect x="-5" y="0" width="110" height="200" stroke="#cccccc" fill="none"/>
+  </pattern>
   <pattern id="pattern_r_5" patternUnits="userSpaceOnUse" width="100" height="500">
    <rect x="-5" y="0" width="110" height="500" stroke="#999999" fill="url(#pattern_r_1)"/>
   </pattern>
   <pattern id="pattern_r_10" patternUnits="userSpaceOnUse" width="100" height="1000">
-   <rect x="-5" y="0" width="110" height="1000" stroke="#666666" fill="url(#pattern_r_5)"/>
+   <rect x="-5" y="0" width="110" height="1000" stroke="#666666" fill="url(#pattern_r_2)"/>
   </pattern>
   <clipPath id="clip_r">
    <rect x="-999" y="-1440" width="9999" height="9999"/>
@@ -237,6 +245,8 @@ http://nssdc.gsfc.nasa.gov/planetary/factsheet/galileanfact_table.html
 http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
 0|LMC*              |     -   |1.542e12 |      -   |     -   |  3.04e17 |      -
 1|heliopause        |12000    |     -   | 15000    |     -   |      -   |      -
+1|Vesta             |  321.966|  353    |   384.673|  223.2  |   262.7  |   286.3  |
+1|Pallas            |  319    |  414    |   510    |  224    |   256    |   284    |
 #|NAME|PERI(Gm)|AVG(Gm)|APO(Gm)|POL.RAD(km)|VOL.MEAN RAD(km)|EQ.RAD(km)|DIAM(km)
 -->
    <textarea id="data" style="display:none;width:100%;height:5em;">
