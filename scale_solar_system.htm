@@ -19,7 +19,9 @@ var datass     = [];
 var svg_common = '';
 
 function init() {
+ console.log(window.location);
  if (window.location.search) {
+  console.log(window.location.search.replace(/?/, ';'));
   var scale_query = (new URLSearchParams(window.location.search.replace(/?/, ';')).get('s');
   if (scale_query) { scale = scale_query; }
  }
