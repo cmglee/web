@@ -19,8 +19,11 @@ var datass     = [];
 var svg_common = '';
 
 function init() {
- var scale_query = (new URLSearchParams(window.location.search)).get('s');
- if (scale_query) { scale = scale_query; }
+ if (window.location.search) {
+  var scale_query = (new URLSearchParams(window.location.search.replace(/?/, ';')).get('s');
+  if (scale_query) { scale = scale_query; }
+ }
+ // if (location.hash) { scale = location.hash.substring(1); }
  var html_table = '';
  var rows = document.getElementById('data').value.trim().split('\n');
  for (var i_row = 0; i_row < rows.length; ++i_row) {
