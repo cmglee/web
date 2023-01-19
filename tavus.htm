@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Linear displacement/position-velocity/speed-acceleration-time calculator by CMG Lee</title>
+  <style type="text/css">
+body          { font:99% Tahoma,sans-serif; color:#000000; background:#ffffff; }
+table         { border-collapse:collapse; white-space:nowrap; }
+th, td, input { padding:0; }
+  </style>
+ </head>
+ <body>
+  <form onSubmit="return false">
+   <h2>Linear acceleration calculator</h2>
+   <p>Update any text box and all the others update accordingly.</p>
+   <script type="text/javascript"><!-- (c) 2023 CMG Lee
+
+var data = [
+ [ '<i>t</i>,</td><td>time', 1,
+   [ 's', 'min', 'hour', 'day', 'ms' ],
+   [ 1, 60, 3600, 86400, 0.001 ],
+   [ [[1,2,3],(a,v,u)=>(v - u) / a], [[2,3,4],(v,u,s)=>2 * s / (v + u)] ] ],
+ [ '<i>a</i>,</td><td>&#160;acceleration', 9.80665,
+   [ 'm/s&#178;', '0-100', '0-60', 'g', 'ft/s&#178;' ],
+   [ 1, -100/3.6, -60*0.44704, 9.80665, 0.3048 ], /// - = 1/x
+   [ [[0,2,3],(t,v,u)=>(v - u) / t], [[2,3,4],(v,u,s)=>(v ** 2 - u ** 2) / (2 * s)] ] ],
+ [ '<i>v</i>,</td><td>&#160;final velocity', undefined,
+   [ 'm/s', 'km/h', 'mph', 'kn', 'ft/s' ],
+   [ 1, 1/3.6, 0.44704, 1.852/3.6, 0.3048 ],
+   [ [[0,1,3],(t,a,u)=>u + a * t], [[1,3,4],(a,u,s)=>(u ** 2 + 2 * a * s) ** 0.5] ] ],
+ [ '<i>u</i>,</td><td>&#160;initial velocity', 0,
+   [ 'm/s', 'km/h', 'mph', 'kn', 'ft/s' ],
+   [ 1, 1/3.6, 0.44704, 1.852/3.6, 0.3048 ],
+   [ [[0,1,2],(t,a,v)=>v - a * t], [[1,2,4],(a,v,s)=>(v ** 2 - 2 * a * s) ** 0.5] ] ],
+ [ '<i>s</i>,</td><td>&#160;displacement', undefined,
+   [ 'm', 'km', 'mi', 'NM', 'ft' ],
+   [ 1, 1000, 1609.344, 1852, 0.3048 ],
+   [ [[0,1,3],(t,a,u)=>u * t + a * t ** 2 / 2], [[1,2,3],(a,v,u)=>(v ** 2 - u ** 2) / (2 * a)] ] ],
+];
+// console.log(data);
+var footer = '<table><tr><td>* 0-100</td><td>: seconds to do 0 &#8211; 100 km/h</td></tr>' +
+             '<tr><td align="right">0-60</td><td>: seconds to do 0 &#8211; 60 mph</td></tr></table>';
+var nRound = 1e5;
+var nKnown = 0, queue = [], form = document.forms[0];
+
+function changeValue(iRow, iCol) {
+ var factor = data[iRow][3][iCol], value;
+ headQueue(iRow);
+ /// Find base value
+ with (Math) { value = eval(form['t' + iRow + '_' + iCol].value); }
+ if (factor < 0) { value = -factor / value; } else { value *= factor; }
+ /// Convert to other units
+ updateColumns(iRow, value);
+ /// Calculate other rows
+ updateRows();
+}
+
+function updateColumns(iRow, valueBase) {
+ /// Update fields
+ for (var iCol in data[iRow][2]) {
+  var factor = data[iRow][3][iCol];
+  form['t' + iRow + '_' + iCol].value = Math.floor(0.5 + nRound * /// round
+   (factor < 0 ? -factor / valueBase : valueBase / factor)) / nRound;
+ }
+}
+
+function updateRows() {
+ var setKnown = new Set(queue.slice(0, nKnown));
+ for (var iQueue = nKnown; iQueue < queue.length; ++iQueue) {
+  var iRow = queue[iQueue];
+  for (var iLambda in data[iRow][4]) {
+   var lambdas = data[iRow][4][iLambda];
+   var iKnowns = lambdas[0];
+   var lambda  = lambdas[1];
+   // console.log(new Set(iKnowns), setKnown);
+   if ([...new Set(iKnowns)].every((x) => setKnown.has(x))) {
+    var knowns = iKnowns.map(x => parseFloat(form['t' + x + '_0'].value));
+    // console.log(knowns, lambda.apply(this, knowns));
+    updateColumns(iRow, lambda.apply(this, knowns));
+    break;
+   }
+  }
+ }
+}
+
+function headQueue(iRow) {
+ /// Shift elements
+ var isShift = false;
+ for (var iQueue = queue.length - 1; iQueue > 0; --iQueue) {
+  if (!isShift && queue[iQueue] == iRow) { isShift = true; }
+  if (isShift) { queue[iQueue] = queue[iQueue - 1]; }
+ }
+ queue[0] = iRow;
+ // console.log(queue);
+ /// Update radio buttons
+ for (var iKnown = 0; iKnown < nKnown; ++iKnown) {
+  for (var iRow in data) {
+   form['r' + iKnown][iRow].checked = (iRow == queue[iKnown]);
+  }
+ }
+}
+
+function init() {
+ /// Calculate number of unknowns and populate queue
+ for (var iRow in data) {
+  if (data[iRow][1] !== undefined) { queue.push(parseInt(iRow)); ++nKnown; }
+ }
+ for (var iRow in data) {
+  if (data[iRow][1] == undefined) { queue.push(parseInt(iRow)); }
+ }
+ /// Build table
+ var html = '<table cellpadding="0" cellspacing="2">\n';
+ var iRow, iCol, iRow_iCol;
+ var isChecked = {};
+ for (var iRow in data) {
+  html += '<tr>';
+  for (var iCol = 0; iCol < nKnown; iCol++) {
+   var isCheck = (data[iRow][1] !== undefined && !isChecked[iRow] &&
+                  iCol >= Object.keys(isChecked).length);
+   if (isCheck) { isChecked[iRow] = true; }
+   // console.log(iRow, iCol, isCheck, isChecked.length, isChecked)
+   html += '<td><input type="radio" name="r' + iCol + '"' +
+    (isCheck ? ' checked="checked"' : '') +
+    ' onChange="headQueue(' + iRow + ')"' +
+    '></td>';
+  }
+  html += '<td>&#160;' + data[iRow][0] + '</td>';
+  for (var iCol in data[iRow][2]) {
+   var iRow_iCol = iRow + '_' + iCol;
+   html += '<td>=<input type="text" name="t' + iRow_iCol +
+    '" size="7" onChange="changeValue(' + iRow + ',' + iCol + ')"' +
+    // (initial[iRow] != undefined ? '' : ' readonly') +
+    '>&#8202;' + data[iRow][2][iCol] + '</td>';
+  }
+  html += '</tr>\n';
+ }
+ html += '<tr><td colspan="' + nKnown +
+  '" style="border:1px;border-style:none solid solid solid;height:2px;"></td></tr><tr><td colspan="'
+  + nKnown + '" style="text-align:center;font-size:80%;">known</td></tr>\n';
+ html += '</table><br />\n' + footer;
+ document.write(html);
+
+ for (var iRow in data) {
+  updateColumns(iRow, data[iRow][1]);
+ }
+ updateRows();
+}
+
+init();
+// --></script>
+   <p>&#169; 2023 &#8226; cm&#610;&#671;ee &#8226; CC-BY-SA 4.0</p>
+  </form>
+ </body>
+</html>
