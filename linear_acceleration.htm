@@ -9,26 +9,23 @@ th, td, input { padding:0; }
   </style>
   <script type="text/javascript"><!-- (c) 2023 CMG Lee
 var datass = [
- ['<i>t</i>, time', 1,
- // ['<i>t</i>, time', undefined,
-   ['s', 'min', 'hour', 'day', 'ms'],
-   [1, 60, 3600, 86400, 0.001] ],
- ['<i>a</i>, acceleration', 9.80665,
-   ['m/s&#178;', '0-100', '0-60', 'g', 'ft/s&#178;'],
-   [1, -100/3.6, -60*0.44704, 9.80665, 0.3048] ], /// - = 1/x
- ['<i>v</i>, final velocity', undefined,
-   ['m/s', 'km/h', 'mph', 'kn', 'ft/s'],
-   [1, 1/3.6, 0.44704, 1.852/3.6, 0.3048] ],
  ['<i>u</i>, initial velocity', 0,
    ['m/s', 'km/h', 'mph', 'kn', 'ft/s'],
    [1, 1/3.6, 0.44704, 1.852/3.6, 0.3048] ],
- ['<i>s</i>, displacement', undefined,
- // ['<i>s</i>, displacement', 9,
+ ['<i>v</i>, final velocity', undefined,
+   ['m/s', 'km/h', 'mph', 'kn', 'ft/s'],
+   [1, 1/3.6, 0.44704, 1.852/3.6, 0.3048] ],
+ ['<i>a</i>, acceleration', 9.80665,
+   ['m/s&#178;', '0-100', '0-60', 'g', 'ft/s&#178;'],
+   [1, -100/3.6, -60*0.44704, 9.80665, 0.3048] ], /// - = 1/x
+ ['<i>s</i>, displacement', 10,
    ['m', 'km', 'mi', 'NM', 'ft'],
    [1, 1000, 1609.344, 1852, 0.3048] ],
+ ['<i>t</i>, time', undefined,
+   ['s', 'min', 'hour', 'day', 'ms'],
+   [1, 60, 3600, 86400, 0.001] ],
 ];
-var t = 0, a = 1, v = 2, u = 3, s = 4;
-var formulass = [
+var u = 0, v = 1, a = 2, s = 3, t = 4, formulass = [
  [v, [u,a,t], (u,a,t) => u + a * t], /// v = u + at
  [u, [v,a,t], (v,a,t) => v - a * t],
  [a, [v,u,t], (v,u,t) => (v - u) / t],
