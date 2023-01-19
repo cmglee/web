@@ -8,37 +8,44 @@ table         { border-collapse:collapse; white-space:nowrap; }
 th, td, input { padding:0; }
   </style>
   <script type="text/javascript"><!-- (c) 2023 CMG Lee
-
-var data = [
- [ '<i>t</i>,</td><td>time', 1,
-   [ 's', 'min', 'hour', 'day', 'ms' ],
-   [ 1, 60, 3600, 86400, 0.001 ],
-   [ [[1,2,3],(a,v,u)=>(v - u) / a], [[2,3,4],(v,u,s)=>2 * s / (v + u)] ] ],
- [ '<i>a</i>,</td><td>&#160;acceleration', 9.80665,
-   [ 'm/s&#178;', '0-100', '0-60', 'g', 'ft/s&#178;' ],
-   [ 1, -100/3.6, -60*0.44704, 9.80665, 0.3048 ], /// - = 1/x
-   [ [[0,2,3],(t,v,u)=>(v - u) / t], [[2,3,4],(v,u,s)=>(v ** 2 - u ** 2) / (2 * s)] ] ],
- [ '<i>v</i>,</td><td>&#160;final velocity', undefined,
-   [ 'm/s', 'km/h', 'mph', 'kn', 'ft/s' ],
-   [ 1, 1/3.6, 0.44704, 1.852/3.6, 0.3048 ],
-   [ [[0,1,3],(t,a,u)=>u + a * t], [[1,3,4],(a,u,s)=>(u ** 2 + 2 * a * s) ** 0.5] ] ],
- [ '<i>u</i>,</td><td>&#160;initial velocity', 0,
-   [ 'm/s', 'km/h', 'mph', 'kn', 'ft/s' ],
-   [ 1, 1/3.6, 0.44704, 1.852/3.6, 0.3048 ],
-   [ [[0,1,2],(t,a,v)=>v - a * t], [[1,2,4],(a,v,s)=>(v ** 2 - 2 * a * s) ** 0.5] ] ],
- [ '<i>s</i>,</td><td>&#160;displacement', undefined,
-   [ 'm', 'km', 'mi', 'NM', 'ft' ],
-   [ 1, 1000, 1609.344, 1852, 0.3048 ],
-   [ [[0,1,3],(t,a,u)=>u * t + a * t ** 2 / 2], [[1,2,3],(a,v,u)=>(v ** 2 - u ** 2) / (2 * a)] ] ],
+var datass = [
+ ['<i>t</i>, time', 1,
+ // ['<i>t</i>, time', undefined,
+   ['s', 'min', 'hour', 'day', 'ms'],
+   [1, 60, 3600, 86400, 0.001] ],
+ ['<i>a</i>, acceleration', 9.80665,
+   ['m/s&#178;', '0-100', '0-60', 'g', 'ft/s&#178;'],
+   [1, -100/3.6, -60*0.44704, 9.80665, 0.3048] ], /// - = 1/x
+ ['<i>v</i>, final velocity', undefined,
+   ['m/s', 'km/h', 'mph', 'kn', 'ft/s'],
+   [1, 1/3.6, 0.44704, 1.852/3.6, 0.3048] ],
+ ['<i>u</i>, initial velocity', 0,
+   ['m/s', 'km/h', 'mph', 'kn', 'ft/s'],
+   [1, 1/3.6, 0.44704, 1.852/3.6, 0.3048] ],
+ ['<i>s</i>, displacement', undefined,
+ // ['<i>s</i>, displacement', 9,
+   ['m', 'km', 'mi', 'NM', 'ft'],
+   [1, 1000, 1609.344, 1852, 0.3048] ],
 ];
-// console.log(data);
+var t = 0, a = 1, v = 2, u = 3, s = 4;
+var formulass = [
+ [v, [u,a,t], (u,a,t) => u + a * t], /// v = u + at
+ [u, [v,a,t], (v,a,t) => v - a * t],
+ [a, [v,u,t], (v,u,t) => (v - u) / t],
+ [t, [v,u,a], (v,u,a) => (v - u) / a],
+ [v, [u,a,s], (u,a,s) => (u ** 2 + 2 * a * s) ** 0.5], /// v^2 = u^2 + 2as
+ [u, [v,a,s], (v,a,s) => (v ** 2 - 2 * a * s) ** 0.5],
+ [a, [v,u,s], (v,u,s) => (v ** 2 - u ** 2) / (2 * s)],
+ [s, [v,u,a], (v,u,a) => (v ** 2 - u ** 2) / (2 * a)],
+]
+// console.log(datass);
 var footer = '<table><tr><td>* 0-100</td><td>: seconds to do 0 &#8211; 100 km/h</td></tr>' +
              '<tr><td align="right">0-60</td><td>: seconds to do 0 &#8211; 60 mph</td></tr></table>';
 var nRound = 1e5;
 var nKnown = 0, queue = [], form = document.forms[0];
 
 function changeValue(iRow, iCol) {
- var factor = data[iRow][3][iCol], value;
+ var factor = datass[iRow][3][iCol], value;
  headQueue(iRow);
  /// Find base value
  with (Math) { value = eval(document.getElementsByName('t' + iRow + '_' + iCol)[0].value); }
@@ -51,8 +58,8 @@ function changeValue(iRow, iCol) {
 
 function updateColumns(iRow, valueBase) {
  /// Update fields
- for (var iCol in data[iRow][2]) {
-  var factor = data[iRow][3][iCol];
+ for (var iCol in datass[iRow][2]) {
+  var factor = datass[iRow][3][iCol];
   document.getElementsByName('t' + iRow + '_' + iCol)[0].value = Math.floor(0.5 + nRound * /// round
    (factor < 0 ? -factor / valueBase : valueBase / factor)) / nRound;
  }
@@ -60,21 +67,35 @@ function updateColumns(iRow, valueBase) {
 
 function updateRows() {
  var setKnown = new Set(queue.slice(0, nKnown));
- for (var iQueue = nKnown; iQueue < queue.length; ++iQueue) {
-  var iRow = queue[iQueue];
-  for (var iLambda in data[iRow][4]) {
-   var lambdas = data[iRow][4][iLambda];
-   var iKnowns = lambdas[0];
-   var lambda  = lambdas[1];
-   // console.log(new Set(iKnowns), setKnown);
-   if ([...new Set(iKnowns)].every((x) => setKnown.has(x))) {
-    var knowns = iKnowns.map(x => parseFloat(document.getElementsByName('t' + x + '_0')[0].value));
-    // console.log(knowns, lambda.apply(this, knowns));
-    updateColumns(iRow, lambda.apply(this, knowns));
-    break;
+ for (var iRound = 0; iRound < queue.length - nKnown; ++iRound) {
+  for (var iQueue = nKnown; iQueue < queue.length; ++iQueue) {
+   var iRow = queue[iQueue];
+   if (!setKnown.has(iRow)) {
+    console.log(iRow, setKnown);
+    for (var iFormula in formulass) {
+     var formulas = formulass[iFormula];
+     if (formulas[0] == iRow) {
+      var iKnowns = formulas[1];
+      console.log(iKnowns, setKnown);
+      if ([...new Set(formulas[1])].every((x) => setKnown.has(x))) {
+       var knowns = iKnowns.map(x => parseFloat(document.getElementsByName('t' + x + '_0')[0].value));
+       console.log(knowns, formulas[2].apply(this, knowns));
+       updateColumns(iRow, formulas[2].apply(this, knowns));
+       setKnown.add(iRow);
+       break;
+      }
+     }
+    }
    }
   }
  }
+ var error = '';
+ for (var iRow in datass) {
+  if (!setKnown.has(parseInt(iRow))) {
+   error += datass[iRow][0].replace(/<[^>]*>/g, '') + ' could not be calculated.\n';
+  }
+ }
+ if (error.length > 0) { alert(error); }
 }
 
 function headQueue(iRow) {
@@ -88,7 +109,7 @@ function headQueue(iRow) {
  // console.log(queue);
  /// Update radio buttons
  for (var iKnown = 0; iKnown < nKnown; ++iKnown) {
-  for (var iRow in data) {
+  for (var iRow in datass) {
    document.getElementsByName('r' + iKnown)[iRow].checked = (iRow == queue[iKnown]);
   }
  }
@@ -96,20 +117,20 @@ function headQueue(iRow) {
 
 function init() {
  /// Calculate number of unknowns and populate queue
- for (var iRow in data) {
-  if (data[iRow][1] !== undefined) { queue.push(parseInt(iRow)); ++nKnown; }
+ for (var iRow in datass) {
+  if (datass[iRow][1] !== undefined) { queue.push(parseInt(iRow)); ++nKnown; }
  }
- for (var iRow in data) {
-  if (data[iRow][1] == undefined) { queue.push(parseInt(iRow)); }
+ for (var iRow in datass) {
+  if (datass[iRow][1] == undefined) { queue.push(parseInt(iRow)); }
  }
  /// Build table
  var html = '<table cellpadding="0" cellspacing="2">\n';
  var iRow, iCol, iRow_iCol;
  var isChecked = {};
- for (var iRow in data) {
+ for (var iRow in datass) {
   html += '<tr>';
   for (var iCol = 0; iCol < nKnown; iCol++) {
-   var isCheck = (data[iRow][1] !== undefined && !isChecked[iRow] &&
+   var isCheck = (datass[iRow][1] !== undefined && !isChecked[iRow] &&
                   iCol >= Object.keys(isChecked).length);
    if (isCheck) { isChecked[iRow] = true; }
    // console.log(iRow, iCol, isCheck, isChecked.length, isChecked)
@@ -118,13 +139,13 @@ function init() {
     ' onChange="headQueue(' + iRow + ')"' +
     '></td>';
   }
-  html += '<td>&#160;' + data[iRow][0] + '</td>';
-  for (var iCol in data[iRow][2]) {
+  html += '<td>&#160;' + datass[iRow][0] + '</td>';
+  for (var iCol in datass[iRow][2]) {
    var iRow_iCol = iRow + '_' + iCol;
    html += '<td>=<input type="text" name="t' + iRow_iCol +
     '" size="7" onChange="changeValue(' + iRow + ',' + iCol + ')"' +
     // (initial[iRow] != undefined ? '' : ' readonly') +
-    '>&#8202;' + data[iRow][2][iCol] + '</td>';
+    '>&#8202;' + datass[iRow][2][iCol] + '</td>';
   }
   html += '</tr>\n';
  }
@@ -134,8 +155,8 @@ function init() {
  html += '</table><br />\n' + footer;
  document.getElementById('table').innerHTML = html;
 
- for (var iRow in data) {
-  updateColumns(iRow, data[iRow][1]);
+ for (var iRow in datass) {
+  updateColumns(iRow, datass[iRow][1]);
  }
  updateRows();
 }
