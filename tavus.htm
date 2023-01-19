@@ -46,7 +46,7 @@ function changeValue(iRow, iCol) {
  var factor = data[iRow][3][iCol], value;
  headQueue(iRow);
  /// Find base value
- with (Math) { value = eval(form['t' + iRow + '_' + iCol].value); }
+ with (Math) { value = eval(document.getElementsByName('t' + iRow + '_' + iCol)[0].value); }
  if (factor < 0) { value = -factor / value; } else { value *= factor; }
  /// Convert to other units
  updateColumns(iRow, value);
@@ -58,7 +58,7 @@ function updateColumns(iRow, valueBase) {
  /// Update fields
  for (var iCol in data[iRow][2]) {
   var factor = data[iRow][3][iCol];
-  form['t' + iRow + '_' + iCol].value = Math.floor(0.5 + nRound * /// round
+  document.getElementsByName('t' + iRow + '_' + iCol)[0].value = Math.floor(0.5 + nRound * /// round
    (factor < 0 ? -factor / valueBase : valueBase / factor)) / nRound;
  }
 }
@@ -73,7 +73,7 @@ function updateRows() {
    var lambda  = lambdas[1];
    // console.log(new Set(iKnowns), setKnown);
    if ([...new Set(iKnowns)].every((x) => setKnown.has(x))) {
-    var knowns = iKnowns.map(x => parseFloat(form['t' + x + '_0'].value));
+    var knowns = iKnowns.map(x => parseFloat(document.getElementsByName('t' + x + '_0')[0].value));
     // console.log(knowns, lambda.apply(this, knowns));
     updateColumns(iRow, lambda.apply(this, knowns));
     break;
@@ -94,7 +94,7 @@ function headQueue(iRow) {
  /// Update radio buttons
  for (var iKnown = 0; iKnown < nKnown; ++iKnown) {
   for (var iRow in data) {
-   form['r' + iKnown][iRow].checked = (iRow == queue[iKnown]);
+   document.getElementsByName('r' + iKnown)[iRow].checked = (iRow == queue[iKnown]);
   }
  }
 }
