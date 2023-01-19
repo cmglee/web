@@ -7,12 +7,7 @@ body          { font:99% Tahoma,sans-serif; color:#000000; background:#ffffff; }
 table         { border-collapse:collapse; white-space:nowrap; }
 th, td, input { padding:0; }
   </style>
- </head>
- <body>
-  <form onSubmit="return false">
-   <h2>Linear acceleration calculator</h2>
-   <p>Update any text box and all the others update accordingly.</p>
-   <script type="text/javascript"><!-- (c) 2023 CMG Lee
+  <script type="text/javascript"><!-- (c) 2023 CMG Lee
 
 var data = [
  [ '<i>t</i>,</td><td>time', 1,
@@ -137,16 +132,20 @@ function init() {
   '" style="border:1px;border-style:none solid solid solid;height:2px;"></td></tr><tr><td colspan="'
   + nKnown + '" style="text-align:center;font-size:80%;">known</td></tr>\n';
  html += '</table><br />\n' + footer;
- document.write(html);
+ document.getElementById('table').innerHTML = html;
 
  for (var iRow in data) {
   updateColumns(iRow, data[iRow][1]);
  }
  updateRows();
 }
-
-init();
 // --></script>
+ </head>
+ <body onLoad="init();">
+  <form onSubmit="return false;">
+   <h2>Linear acceleration calculator</h2>
+   <p>Update any text box and all the others update accordingly.</p>
+   <div id="table"></div>
    <p>&#169; 2023 &#8226; cm&#610;&#671;ee &#8226; CC-BY-SA 4.0</p>
   </form>
  </body>
