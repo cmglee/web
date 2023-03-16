@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Skew lines calculator by CMG Lee</title>
+  <style type="text/css">
+body   { font-family:Tahoma,sans-serif; color:#000000; background:#ffffff; }
+table  { border:none; border-collapse:collapse; white-space:nowrap; }
+th, td { padding:1ex; }
+input[type=text]         { font-size:125%; text-align:right; padding-right:1ex; }
+input[disabled=disabled] { color:#000000;  border:1px solid #eeeeee; }
+  </style>
+  <script type="text/javascript"><!-- (c) 2023 CMG Lee
+function cross(v1s, v2s)  { return [v1s[1] * v2s[2] - v2s[1] * v1s[2],
+ v2s[0] * v1s[2] - v1s[0] * v2s[2], v1s[0] * v2s[1] - v2s[0] * v1s[1]]; }
+function dot(v1s, v2s)    { return  v1s[0] * v2s[0] + v1s[1] * v2s[1] + v1s[2] * v2s[2] ; }
+function plus(v1s, v2s)   { return [v1s[0] + v2s[0],  v1s[1] + v2s[1],  v1s[2] + v2s[2]]; }
+function minus(v1s, v2s)  { return [v1s[0] - v2s[0],  v1s[1] - v2s[1],  v1s[2] - v2s[2]]; }
+function scale(v1s, scal) { return [v1s[0] * scal  ,  v1s[1] * scal  ,  v1s[2] * scal  ]; }
+function magnitude(v1s)   { return Math.hypot(v1s[0], v1s[1], v1s[2]); }
+
+function update() {
+ /// Read values, converting to parallel vector if needed
+ var isPoint = document.getElementById('point').checked;
+ var insss   = [[[],[]],[[],[]]];
+ for   (var iRow = 0; iRow < 2; ++iRow) {
+  for  (var iCol = 0; iCol < 2; ++iCol) {
+   for (var iXYZ = 0; iXYZ < 3; ++iXYZ) {
+    insss[iRow][iCol][iXYZ] = parseFloat(document.getElementById(
+                                          'in' + iRow + '_' + iCol + '_' + iXYZ).value) -
+                              (isPoint && iCol > 0 ? insss[iRow][0][iXYZ] : 0);
+   }
+  }
+ }
+ var p1s = insss[0][0], d1s = insss[0][1];
+ var p2s = insss[1][0], d2s = insss[1][1];
+ /// Do maths
+ ns  = cross(d1s, d2s);
+ n1s = cross(d1s, ns);
+ n2s = cross(d2s, ns);
+ c1s = plus(p1s, scale(d1s, dot(n2s, minus(p2s, p1s)) / dot(n2s, d1s)));
+ c2s = plus(p2s, scale(d2s, dot(n1s, minus(p1s, p2s)) / dot(n1s, d2s)));
+ var distance = (dot(n1s, d2s) != 0 ? magnitude(minus(c1s, c2s)) :
+                 magnitude(cross(d1s, minus(p1s, p2s))) / magnitude(d1s));
+ // console.log(p1s, p2s, d1s, d2s, ns, n1s, n2s, distance, c1s, c2s);
+ /// Update fields
+ document.getElementById('distance').value = distance;
+ for  (var iCol = 0; iCol < 2; ++iCol) {
+  for (var iXYZ = 0; iXYZ < 3; ++iXYZ) {
+   document.getElementById('in2_' + iCol + '_' + iXYZ).value = (iCol == 0 ? c1s : c2s)[iXYZ];
+  }
+ }
+}
+
+function init() {
+ /// Build table
+ var default_valuesss = [[[0,0,0],[18,18,9]],[[0,0,9],[0,18,-9]],[[0,0,0],[0,0,0]]];
+ for  (var iRow = 0; iRow < 3; ++iRow) {
+  for (var iCol = 0; iCol < 2; ++iCol) {
+   var html = '';
+   for (var iXYZ = 0; iXYZ < 3; ++iXYZ) {
+    html += '<input id="' + 'in' + iRow + '_' + iCol + '_' + iXYZ + '" value="' +
+            default_valuesss[iRow][iCol][iXYZ] + '" onkeyup="update()"' +
+            (iRow == 2 ? ' disabled="disabled"' : '' ) + 'type="text"><br />';
+   }
+   document.getElementById('td' + iRow + '_' + iCol).innerHTML = html;
+  }
+ }
+ document.getElementById('vector').click();
+ document.getElementById('point').focus();
+}
+// --></script>
+ </head>
+ <body onLoad="init();">
+  <form onSubmit="return false;">
+   <h2>Skew lines calculator</h2>
+   <table id="table" border="1">
+    <tr>
+     <th style="border:none;"></th>
+     <th>Passing through point</th>
+     <th style="text-align:left;">
+      <label><input id="point"  name="mode" type="radio" onchange="update()"/>Also passing through</label><br />
+      <label><input id="vector" name="mode" type="radio" onchange="update()"/>Parallel to vector</label>
+     </th></tr>
+    </tr>
+    <tr><th>Line 1</th><td id="td0_0" /><td id="td0_1" /></tr>
+    <tr><th>Line 2</th><td id="td1_0" /><td id="td1_1" /></tr>
+    <tr><td colspan="2" style="border:none;text-align:right;">Shortest distance between lines 1 and 2 =</td>
+     <td style="border:none;"><input id="distance" disabled="disabled" type="text"/></td></tr>
+    <tr><th>Between<br />points</th><td id="td2_0" /><td id="td2_1" /></tr>
+   </table>
+   <p>&#169; 2023 &#8226; cm&#610;&#671;ee &#8226; CC-BY-SA 4.0</p>
+  </form>
+ </body>
+</html>
