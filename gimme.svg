@@ -32,6 +32,32 @@
    setTimeout(function() { throw(args.join('\t')); }, 0);
   }
   */
+  /// from http://marcgg.com/blog/2016/11/01/javascript-audio
+  ///  and http://redblobgames.com/x/1618-webaudio
+  function playNotes(frequencys, durations, type='triangle') {
+   var audioContext = new AudioContext();
+   var now          = audioContext.currentTime;
+   var gain         = audioContext.createGain();
+   var oscillator   = audioContext.createOscillator();
+   oscillator.connect(gain).connect(audioContext.destination);
+   oscillator.type = type;
+   if (frequencys.constructor !== Array) { frequencys = [frequencys]; }
+   if (durations .constructor !== Array) { durations  = [durations ]; }
+   var duration;
+   for (var i = 0; i < frequencys.length; ++i) {
+    var frequency = frequencys[i];
+    if (i < durations.length) { duration = durations[i]; }
+    if (duration > 0) { /// avoid click if last note is not played
+     gain.gain.exponentialRampToValueAtTime(Math.min(1, Math.sqrt(110 / frequency)) *
+      (type == 'sawtooth' ? 0.25 : type == 'square' ? 0.5 : 1), now);
+     gain.gain.exponentialRampToValueAtTime(1e-3, now + duration - 1e-3);
+    }
+    oscillator.frequency.exponentialRampToValueAtTime(frequency, now);
+    now += duration;
+   }
+   oscillator.start();
+   oscillator.stop(now);
+  }
   function sind(deg) { return Math.sin(deg * deg2rad); }
   function cosd(deg) { return Math.cos(deg * deg2rad); }
   function atand(val) { return Math.atan(val) * rad2deg; }
@@ -70,7 +96,7 @@
      shoot();
      break;
     case 2:
-     restart();
+     start();
      break;
    }
    control.obj.setAttribute('style', 'cursor:grab');
@@ -97,12 +123,13 @@
    score.value = value;
    score.obj.firstChild.nodeValue = value;
   }
-  function restart() {
+  function start() {
    while (discs.length > 0) { remove_disc(discs.length - 1); }
    update_score(0);
    reset_shot();
    setAttributes(gameover.obj, {transform:'scale(1,0)'});
    control.mode = 0;
+   playNotes([55,14080], [1,0], 'triangle');
   }
   function make_disc() {
    var disc = {x:shot.x, y:shot.y, r:shot.r, life:discDasharrays.length - 1};
@@ -115,6 +142,7 @@
   }
   function bump_disc(i_disc) {
    var disc = discs[i_disc];
+   playNotes(1e4 / disc.r, 0.5, disc.life == 0 ? 'sawtooth' : disc.life == 1 ? 'triangle' : 'sine');
    if (disc.life > 0) {
     --disc.life;
     setAttributes(disc.obj, {'stroke-dasharray':discDasharrays[disc.life]});
@@ -179,6 +207,7 @@
     reflection = {y:arena_height_r - end.y, x:end.x - intersect.x};
     intersects.push({t2:(intersect.x - start.x) / start2end.x, intersect:intersect, reflection:reflection, i_disc:-1});
    }
+   if (intersects.length > 0) { playNotes(110, 0.5, 'sine'); }
    /// For each disc, check if ray intersects it,
    /// calculating reflection if so
    for (var i_disc = 0; i_disc < discs.length; ++i_disc) {
@@ -241,6 +270,7 @@
    // console.log(dx, dy, bearing, speed);
    if (speed < speedMin) { speed = speedMin; }
    if (speed > speedMax) { speed = speedMax; }
+   playNotes(speed * 8, 0.5, 'sine');
    step(bearing, speed, 1);
   }
   function game_over_animate(scale) {
@@ -257,6 +287,7 @@
      control.mode = 2;
      control.obj.setAttribute('style', 'cursor:default');
      game_over_animate(0);
+     playNotes([220,55], [2,0], 'sine');
      return;
     }
    }
@@ -266,7 +297,7 @@
   }
   function main(evt) {
    init();
-   restart();
+   start();
   }
  ]]></script>
  <defs>
@@ -287,7 +318,7 @@
  <use xlink:href="#all" fill="#333333"/>
  <g id="container" stroke="#0066cc" stroke-width="2" stroke-linecap="round">
   <rect id="arena" x="0" y="0" rx="9" ry="9" width="500" height="750" stroke="#000000" fill="#ffffff"/>
-  <circle id="gun"  cx="250" cy="600" r="20" stroke="none" fill="url(#grad_gun)"/>
+  <circle id="gun"  cx="250" cy="600" r="10" stroke="none" fill="url(#grad_gun)"/>
   <circle id="shot" cx="0"   cy="0"   r="10" stroke="none" fill="url(#grad_shot)"/>
   <g stroke="none" fill="#000000" fill-opacity="0.5">
    <text id="score" x="250" y="250" text-anchor="middle" font-family="serif" font-size="200" letter-spacing="-10" stroke="#ffffff">&#160;</text>
