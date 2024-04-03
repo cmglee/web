@@ -81,11 +81,13 @@ function volumeAudioProcess(event) {
   // want "fast attack, slow release."
   this.volume = Math.max(rms, this.volume * this.averaging)
   console.log(this.volume);
-  document.getElementById('audio-value').innerHTML = '&#9608;'.repeat(1e3 * this.volume);
+  // document.getElementById('audio-value').innerHTML = '&#9608;'.repeat(1e3 * this.volume);
+  document.getElementById('audio-value').innerHTML = this.volume;
 }
   </script>
  </head>
  <body onLoad="beginDetect()">
+  mic trigger
   <div id="audio-value"></div>
  </body>
 </html>
